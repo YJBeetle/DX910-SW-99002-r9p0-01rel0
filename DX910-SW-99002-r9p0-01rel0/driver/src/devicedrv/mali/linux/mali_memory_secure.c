@@ -15,6 +15,7 @@
 #include <linux/mutex.h>
 #include <linux/dma-mapping.h>
 #include <linux/dma-buf.h>
+#include <linux/dma-direct.h>
 
 _mali_osk_errcode_t mali_mem_secure_attach_dma_buf(mali_mem_secure *secure_mem, u32 size, int mem_fd)
 {
@@ -128,7 +129,7 @@ int mali_mem_secure_cpu_map(mali_mem_backend *mem_bkend, struct vm_area_struct *
 		MALI_DEBUG_ASSERT(0 == size % _MALI_OSK_MALI_PAGE_SIZE);
 
 		for (j = 0; j < size / _MALI_OSK_MALI_PAGE_SIZE; j++) {
-			ret = vm_insert_pfn(vma, addr, PFN_DOWN(phys));
+			ret = vmf_insert_pfn(vma, addr, PFN_DOWN(phys));
 
 			if (unlikely(0 != ret)) {
 				return -EFAULT;

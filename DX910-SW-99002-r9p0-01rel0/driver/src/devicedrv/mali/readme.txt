@@ -26,3 +26,10 @@ kernel config includes enabled dma-buf.
 The kernel needs to be provided with a platform_device struct for the Mali GPU
 device. See the mali_utgard.h header file for how to set up the Mali GPU
 resources.
+
+
+export KDIR=/mnt/Data0/N1kernel/linux-4.20.10/
+export KDIR=/usr/src/linux-headers-4.20.5-aml-s905
+export KDIR=/usr/src/linux-headers-4.20.5-aml-s905
+export USING_UMP=0
+export BUILD=release

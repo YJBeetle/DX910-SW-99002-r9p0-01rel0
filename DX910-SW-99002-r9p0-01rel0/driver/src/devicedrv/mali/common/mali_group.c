@@ -44,7 +44,7 @@ int mali_max_job_runtime = MALI_MAX_JOB_RUNTIME_DEFAULT;
 static void mali_group_bottom_half_mmu(void *data);
 static void mali_group_bottom_half_gp(void *data);
 static void mali_group_bottom_half_pp(void *data);
-static void mali_group_timeout(void *data);
+static void mali_group_timeout(struct timer_list *t);
 static void mali_group_reset_pp(struct mali_group *group);
 static void mali_group_reset_mmu(struct mali_group *group);
 
@@ -64,27 +64,25 @@ struct mali_group *mali_group_create(struct mali_l2_cache_core *core,
 	}
 
 	group = _mali_osk_calloc(1, sizeof(struct mali_group));
-	if (NULL != group) {
-		group->timeout_timer = _mali_osk_timer_init();
-		if (NULL != group->timeout_timer) {
-			_mali_osk_timer_setcallback(group->timeout_timer, mali_group_timeout, (void *)group);
+	if (NULL != group)
+	{
+		timer_setup(&group->timeout_timer, mali_group_timeout, 0);
 
-			group->l2_cache_core[0] = core;
-			_mali_osk_list_init(&group->group_list);
-			_mali_osk_list_init(&group->executor_list);
-			_mali_osk_list_init(&group->pm_domain_list);
-			group->bcast_core = bcast;
-			group->dlbu_core = dlbu;
+		group->l2_cache_core[0] = core;
+		_mali_osk_list_init(&group->group_list);
+		_mali_osk_list_init(&group->executor_list);
+		_mali_osk_list_init(&group->pm_domain_list);
+		group->bcast_core = bcast;
+		group->dlbu_core = dlbu;
 
-			/* register this object as a part of the correct power domain */
-			if ((NULL != core) || (NULL != dlbu) || (NULL != bcast))
-				group->pm_domain = mali_pm_register_group(domain_index, group);
+		/* register this object as a part of the correct power domain */
+		if ((NULL != core) || (NULL != dlbu) || (NULL != bcast))
+			group->pm_domain = mali_pm_register_group(domain_index, group);
 
-			mali_global_groups[mali_global_num_groups] = group;
-			mali_global_num_groups++;
+		mali_global_groups[mali_global_num_groups] = group;
+		mali_global_num_groups++;
 
-			return group;
-		}
+		return group;
 		_mali_osk_free(group);
 	}
 
@@ -145,11 +143,6 @@ void mali_group_delete(struct mali_group *group)
 
 			break;
 		}
-	}
-
-	if (NULL != group->timeout_timer) {
-		_mali_osk_timer_del(group->timeout_timer);
-		_mali_osk_timer_term(group->timeout_timer);
 	}
 
 	if (NULL != group->bottom_half_work_mmu) {
@@ -875,7 +868,7 @@ void mali_group_start_gp_job(struct mali_group *group, struct mali_gp_job *job, 
 
 	/* Setup SW timer and record start time */
 	group->start_time = _mali_osk_time_tickcount();
-	_mali_osk_timer_mod(group->timeout_timer, _mali_osk_time_mstoticks(mali_max_job_runtime));
+	_mali_osk_timer_mod(&group->timeout_timer, _mali_osk_time_mstoticks(mali_max_job_runtime));
 
 	MALI_DEBUG_PRINT(4, ("Group: Started GP job 0x%08X on group %s at %u\n",
 			     job,
@@ -1028,7 +1021,7 @@ void mali_group_start_pp_job(struct mali_group *group, struct mali_pp_job *job, 
 
 	/* Setup SW timer and record start time */
 	group->start_time = _mali_osk_time_tickcount();
-	_mali_osk_timer_mod(group->timeout_timer, _mali_osk_time_mstoticks(mali_max_job_runtime));
+	_mali_osk_timer_mod(&group->timeout_timer, _mali_osk_time_mstoticks(mali_max_job_runtime));
 
 	MALI_DEBUG_PRINT(4, ("Group: Started PP job 0x%08X part %u/%u on group %s at %u\n",
 			     job, sub_job + 1,
@@ -1118,7 +1111,7 @@ struct mali_pp_job *mali_group_complete_pp(struct mali_group *group, mali_bool s
 	MALI_DEBUG_ASSERT(MALI_TRUE == group->is_working);
 
 	/* Stop/clear the timeout timer. */
-	_mali_osk_timer_del_async(group->timeout_timer);
+	_mali_osk_timer_del_async(&group->timeout_timer);
 
 	if (NULL != group->pp_running_job) {
 
@@ -1229,7 +1222,7 @@ struct mali_gp_job *mali_group_complete_gp(struct mali_group *group, mali_bool s
 	MALI_DEBUG_ASSERT(MALI_TRUE == group->is_working);
 
 	/* Stop/clear the timeout timer. */
-	_mali_osk_timer_del_async(group->timeout_timer);
+	_mali_osk_timer_del_async(&group->timeout_timer);
 
 	if (NULL != group->gp_running_job) {
 		mali_gp_update_performance_counters(group->gp_core, group->gp_running_job);
@@ -1761,9 +1754,9 @@ static void mali_group_bottom_half_pp(void *data)
 				      0xFFFFFFFF, 0);
 }
 
-static void mali_group_timeout(void *data)
+static void mali_group_timeout(struct timer_list *t)
 {
-	struct mali_group *group = (struct mali_group *)data;
+	struct mali_group *group = from_timer(group, t, timeout_timer);
 	MALI_DEBUG_ASSERT_POINTER(group);
 
 	MALI_DEBUG_PRINT(2, ("Group: timeout handler for %s at %u\n",

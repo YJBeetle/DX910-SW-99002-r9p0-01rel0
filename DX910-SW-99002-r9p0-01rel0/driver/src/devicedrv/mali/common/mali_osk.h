@@ -955,7 +955,7 @@ _mali_osk_errcode_t _mali_osk_notification_queue_dequeue(_mali_osk_notification_
  *
  * @return a pointer to the allocated timer object, or NULL on failure.
  */
-_mali_osk_timer_t *_mali_osk_timer_init(void);
+struct timer_list *_mali_osk_timer_init(void);
 
 /** @brief Start a timer
  *
@@ -972,7 +972,7 @@ _mali_osk_timer_t *_mali_osk_timer_init(void);
  * @param ticks_to_expire the amount of time in ticks for the timer to run
  * before triggering.
  */
-void _mali_osk_timer_add(_mali_osk_timer_t *tim, unsigned long ticks_to_expire);
+void _mali_osk_timer_add(struct timer_list *tim, unsigned long ticks_to_expire);
 
 /** @brief Modify a timer
  *
@@ -991,7 +991,7 @@ void _mali_osk_timer_add(_mali_osk_timer_t *tim, unsigned long ticks_to_expire);
  * should trigger.
  *
  */
-void _mali_osk_timer_mod(_mali_osk_timer_t *tim, unsigned long ticks_to_expire);
+void _mali_osk_timer_mod(struct timer_list *tim, unsigned long ticks_to_expire);
 
 /** @brief Stop a timer, and block on its completion.
  *
@@ -1012,7 +1012,7 @@ void _mali_osk_timer_mod(_mali_osk_timer_t *tim, unsigned long ticks_to_expire);
  * @param tim the timer to stop.
  *
  */
-void _mali_osk_timer_del(_mali_osk_timer_t *tim);
+void _mali_osk_timer_del(struct timer_list *tim);
 
 /** @brief Stop a timer.
  *
@@ -1023,7 +1023,7 @@ void _mali_osk_timer_del(_mali_osk_timer_t *tim);
  *
  * @param tim the timer to stop.
  */
-void _mali_osk_timer_del_async(_mali_osk_timer_t *tim);
+void _mali_osk_timer_del_async(struct timer_list *tim);
 
 /** @brief Check if timer is pending.
  *
@@ -1032,7 +1032,7 @@ void _mali_osk_timer_del_async(_mali_osk_timer_t *tim);
  * @param tim the timer to check
  * @return MALI_TRUE if time is active, MALI_FALSE if it is not active
  */
-mali_bool _mali_osk_timer_pending(_mali_osk_timer_t *tim);
+mali_bool _mali_osk_timer_pending(struct timer_list *tim);
 
 /** @brief Set a timer's callback parameters.
  *
@@ -1046,19 +1046,19 @@ mali_bool _mali_osk_timer_pending(_mali_osk_timer_t *tim);
  * @param callback Function to call when timer expires
  * @param data Function-specific data to supply to the function on expiry.
  */
-void _mali_osk_timer_setcallback(_mali_osk_timer_t *tim, _mali_osk_timer_callback_t callback, void *data);
+void _mali_osk_timer_setcallback(struct timer_list *tim, _mali_osk_timer_callback_t callback, void *data);
 
 /** @brief Terminate a timer, and deallocate resources.
  *
  * The timer must first be stopped by calling _mali_osk_timer_del().
  *
- * It is a programming error for _mali_osk_timer_term() to be called on:
+ * It is a programming error for timer_listerm() to be called on:
  * - timer that is currently running
  * - a timer that is currently executing its callback.
  *
  * @param tim the timer to deallocate.
  */
-void _mali_osk_timer_term(_mali_osk_timer_t *tim);
+void _mali_osk_timer_term(struct timer_list *tim);
 /** @} */ /* end group _mali_osk_timer */
 
 

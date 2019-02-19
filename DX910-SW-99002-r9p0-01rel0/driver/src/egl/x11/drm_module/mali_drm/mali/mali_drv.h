@@ -19,7 +19,7 @@
 #define DRIVER_MINOR        1
 #define DRIVER_PATCHLEVEL   0
 
-#include "drm_sman.h"
+#include "drm/drm_mm.h"
 
 typedef struct drm_mali_private
 {

@@ -395,10 +395,10 @@ typedef struct _mali_osk_notification_t_struct {
  * by any callers of _mali_osk_timer_del(). Otherwise, a deadlock may occur.
  *
  * @param arg Function-specific data */
-typedef void (*_mali_osk_timer_callback_t)(void *arg);
+typedef void (*_mali_osk_timer_callback_t)(struct timer_list *t);
 
 /** @brief Private type for Timer Callback Objects */
-typedef struct _mali_osk_timer_t_struct _mali_osk_timer_t;
+typedef struct timer_list timer_list;
 /** @} */ /* end group _mali_osk_timer */
 
 
