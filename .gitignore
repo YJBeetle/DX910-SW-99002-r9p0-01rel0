@@ -1,0 +1,11 @@
+.DS_Store
+.vscode
+*.ko
+.*.ko.cmd
+*.o
+.*.o.cmd
+modules.order
+Module.symvers
+*.mod.c
+.tmp_versions
+DX910-SW-99002-r9p0-01rel0/driver/src/devicedrv/ump/arch
